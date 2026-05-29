@@ -2,7 +2,12 @@
 
 Australian take-home pay estimator (React + Vite). Calculates income tax (PAYG),
 Medicare levy, HELP/HECS student loan repayment, superannuation, and bonus impact
-for the 2024-25 financial year.
+for the 2025-26 financial year.
+
+Rates sourced from the ATO:
+[resident tax rates](https://www.ato.gov.au/tax-rates-and-codes/tax-rates-australian-residents)
+and [study/training loan thresholds](https://www.ato.gov.au/tax-rates-and-codes/study-and-training-support-loans-rates-and-repayment-thresholds).
+Note HELP/HECS uses **marginal** repayment rates from 2025-26 onward.
 
 > Estimates only — simplified resident rates, not financial advice.
 

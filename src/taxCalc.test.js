@@ -25,11 +25,29 @@ test("super: 11.5% of gross", () => {
   assert.equal(calculateSuper(100000, 0.115), 11500);
 });
 
-test("HELP: below threshold pays nothing", () => {
-  assert.equal(calculateHelpRepayment(50000, true), 0);
+test("HELP: below $67,000 threshold pays nothing", () => {
+  assert.equal(calculateHelpRepayment(67000, true), 0);
 });
 
-test("HELP: top band is 10% of whole income", () => {
+test("HELP: marginal 15c over $67,000", () => {
+  // $100,000: (100000 - 67000) * 0.15 = 4950
+  assert.equal(calculateHelpRepayment(100000, true), 4950);
+});
+
+test("HELP: marginal third band $8,700 + 17c over $125,000", () => {
+  // $150,000: 8700 + (150000 - 125000) * 0.17 = 8700 + 4250 = 12950
+  assert.equal(calculateHelpRepayment(150000, true), 12950);
+});
+
+test("HELP: schedule is continuous at the $179,285 top-tier boundary", () => {
+  // marginal: 8700 + (179285 - 125000) * 0.17 = 17928.45
+  // top tier: 179285 * 0.10                    = 17928.50  (≈ equal)
+  const marginal = calculateHelpRepayment(179285, true);
+  const topTier = 179286 * 0.1;
+  assert.ok(Math.abs(marginal - topTier) < 1);
+});
+
+test("HELP: top tier is 10% of whole income", () => {
   assert.equal(calculateHelpRepayment(200000, true), 20000);
 });
 

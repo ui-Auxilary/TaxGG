@@ -34,7 +34,7 @@ export default function App() {
           <h1>
             Tax<span>GG</span>
           </h1>
-          <p className="subtitle">Australian take-home pay estimate · 2024-25</p>
+          <p className="subtitle">Australian take-home pay estimate · 2025-26</p>
         </header>
 
         <div className="field">

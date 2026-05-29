@@ -1,13 +1,19 @@
 // ---------------------------------------------------------------
-// TaxGG — Australian tax calculation logic (2024-25 financial year)
+// TaxGG — Australian tax calculation logic (2025-26 financial year)
 //
 // Pure functions, no UI dependencies. All amounts are annual AUD.
 // Figures are simplified estimates — not financial advice. Replace
 // thresholds each financial year as the ATO updates them.
+//
+// Sources (ATO):
+//   Resident tax rates:
+//     ato.gov.au/tax-rates-and-codes/tax-rates-australian-residents
+//   Study/training loan (HELP/HECS) thresholds:
+//     ato.gov.au/tax-rates-and-codes/study-and-training-support-loans-rates-and-repayment-thresholds
 // ---------------------------------------------------------------
 
-// Resident income tax brackets — 2024-25 (post Stage 3 cuts).
-// Each entry: tax owed up to `upTo`, plus `rate` on income above `over`.
+// Resident income tax brackets — 2025-26 (unchanged from 2024-25).
+// Each entry: `rate` applies to income between `over` and `upTo`.
 export const INCOME_TAX_BRACKETS = [
   { over: 0, upTo: 18200, rate: 0.0 },
   { over: 18200, upTo: 45000, rate: 0.16 },
@@ -21,28 +27,17 @@ export const MEDICARE_LEVY_RATE = 0.02;
 // Superannuation Guarantee rate — 11.5% for 2024-25.
 export const DEFAULT_SUPER_RATE = 0.115;
 
-// HELP/HECS student loan repayment thresholds — 2024-25.
-// Repayment is `rate` applied to the WHOLE repayment income (not marginal).
+// HELP/HECS student loan repayment — 2025-26.
+// From 2025-26 the ATO uses MARGINAL rates: repayment applies only to the
+// repayment income above each threshold (not a flat % of the whole income).
+// The top tier is a flat 10% of total repayment income — this meets the
+// marginal schedule continuously at $179,285.
+export const HELP_TOP_TIER_THRESHOLD = 179286;
+export const HELP_TOP_TIER_RATE = 0.1;
 export const HELP_REPAYMENT_BANDS = [
-  { min: 0, rate: 0.0 },
-  { min: 54435, rate: 0.01 },
-  { min: 62851, rate: 0.02 },
-  { min: 66621, rate: 0.025 },
-  { min: 70619, rate: 0.03 },
-  { min: 74856, rate: 0.035 },
-  { min: 79347, rate: 0.04 },
-  { min: 84108, rate: 0.045 },
-  { min: 89155, rate: 0.05 },
-  { min: 94504, rate: 0.055 },
-  { min: 100175, rate: 0.06 },
-  { min: 106186, rate: 0.065 },
-  { min: 112557, rate: 0.07 },
-  { min: 119310, rate: 0.075 },
-  { min: 126468, rate: 0.08 },
-  { min: 134057, rate: 0.085 },
-  { min: 142101, rate: 0.09 },
-  { min: 150627, rate: 0.095 },
-  { min: 159664, rate: 0.1 },
+  { over: 0, upTo: 67000, rate: 0.0 },
+  { over: 67000, upTo: 125000, rate: 0.15 },
+  { over: 125000, upTo: HELP_TOP_TIER_THRESHOLD, rate: 0.17 },
 ];
 
 /** Progressive income tax (PAYG) on taxable income. */
@@ -61,15 +56,21 @@ export function calculateMedicareLevy(taxableIncome) {
   return taxableIncome * MEDICARE_LEVY_RATE;
 }
 
-/** Compulsory HELP/HECS repayment based on repayment income. */
+/**
+ * Compulsory HELP/HECS repayment based on repayment income (2025-26 marginal).
+ * Top tier ($179,286+) is a flat 10% of total repayment income.
+ */
 export function calculateHelpRepayment(repaymentIncome, hasLoan) {
-  if (!hasLoan) return 0;
-  let rate = 0;
-  for (const band of HELP_REPAYMENT_BANDS) {
-    if (repaymentIncome >= band.min) rate = band.rate;
-    else break;
+  if (!hasLoan || repaymentIncome <= 0) return 0;
+  if (repaymentIncome >= HELP_TOP_TIER_THRESHOLD) {
+    return repaymentIncome * HELP_TOP_TIER_RATE;
   }
-  return repaymentIncome * rate;
+  let repayment = 0;
+  for (const { over, upTo, rate } of HELP_REPAYMENT_BANDS) {
+    if (repaymentIncome <= over) break;
+    repayment += (Math.min(repaymentIncome, upTo) - over) * rate;
+  }
+  return repayment;
 }
 
 /** Superannuation Guarantee — paid by employer on top of gross. */
