@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TaxGG — Tax Calculator</title>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --panel: #1a2129;
+      --accent: #4ade80;
+      --accent-dim: #22c55e;
+      --text: #e6edf3;
+      --muted: #8b98a5;
+      --border: #2d3640;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding: 2rem 1rem;
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 2rem;
+      width: 100%;
+      max-width: 460px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
+    h1 {
+      margin: 0 0 0.25rem;
+      font-size: 1.5rem;
+    }
+    h1 span { color: var(--accent); }
+    .subtitle {
+      color: var(--muted);
+      margin: 0 0 1.5rem;
+      font-size: 0.9rem;
+    }
+    label {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 0.35rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .field { margin-bottom: 1.1rem; }
+    input, select {
+      width: 100%;
+      padding: 0.7rem 0.8rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 1rem;
+    }
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--accent-dim);
+    }
+    button {
+      width: 100%;
+      padding: 0.8rem;
+      background: var(--accent);
+      color: #06210f;
+      font-weight: 600;
+      font-size: 1rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 0.5rem;
+    }
+    button:hover { background: var(--accent-dim); }
+    .results {
+      margin-top: 1.5rem;
+      border-top: 1px solid var(--border);
+      padding-top: 1.25rem;
+      display: none;
+    }
+    .results.show { display: block; }
+    .row {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.4rem 0;
+      font-size: 0.95rem;
+    }
+    .row .lbl { color: var(--muted); }
+    .row.total {
+      border-top: 1px solid var(--border);
+      margin-top: 0.5rem;
+      padding-top: 0.7rem;
+      font-size: 1.15rem;
+      font-weight: 700;
+    }
+    .row.total .val { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Tax<span>GG</span></h1>
+    <p class="subtitle">Estimate your income tax owed</p>
+
+    <div class="field">
+      <label for="income">Gross Annual Income</label>
+      <input type="number" id="income" placeholder="0.00" min="0" step="0.01" />
+    </div>
+
+    <div class="field">
+      <label for="deductions">Deductions</label>
+      <input type="number" id="deductions" placeholder="0.00" min="0" step="0.01" />
+    </div>
+
+    <div class="field">
+      <label for="status">Filing Status</label>
+      <select id="status">
+        <option value="single">Single</option>
+        <option value="married">Married Filing Jointly</option>
+        <option value="head">Head of Household</option>
+      </select>
+    </div>
+
+    <button id="calcBtn">Calculate Tax</button>
+
+    <div class="results" id="results">
+      <div class="row"><span class="lbl">Gross Income</span><span class="val" id="r-gross">$0.00</span></div>
+      <div class="row"><span class="lbl">Taxable Income</span><span class="val" id="r-taxable">$0.00</span></div>
+      <div class="row"><span class="lbl">Effective Rate</span><span class="val" id="r-rate">0%</span></div>
+      <div class="row total"><span class="lbl">Tax Owed</span><span class="val" id="r-tax">$0.00</span></div>
+    </div>
+  </div>
+
+  <script>
+    // ---------------------------------------------------------------
+    // TaxGG — calculation logic (stubs)
+    // Replace bracket data / logic with real jurisdiction rules later.
+    // ---------------------------------------------------------------
+
+    // 2024-style federal brackets per filing status. STUB DATA.
+    const BRACKETS = {
+      single: [
+        { upTo: 11600,  rate: 0.10 },
+        { upTo: 47150,  rate: 0.12 },
+        { upTo: 100525, rate: 0.22 },
+        { upTo: 191950, rate: 0.24 },
+        { upTo: 243725, rate: 0.32 },
+        { upTo: 609350, rate: 0.35 },
+        { upTo: Infinity, rate: 0.37 },
+      ],
+      married: [
+        { upTo: 23200,  rate: 0.10 },
+        { upTo: 94300,  rate: 0.12 },
+        { upTo: 201050, rate: 0.22 },
+        { upTo: 383900, rate: 0.24 },
+        { upTo: 487450, rate: 0.32 },
+        { upTo: 731200, rate: 0.35 },
+        { upTo: Infinity, rate: 0.37 },
+      ],
+      head: [
+        { upTo: 16550,  rate: 0.10 },
+        { upTo: 63100,  rate: 0.12 },
+        { upTo: 100500, rate: 0.22 },
+        { upTo: 191950, rate: 0.24 },
+        { upTo: 243700, rate: 0.32 },
+        { upTo: 609350, rate: 0.35 },
+        { upTo: Infinity, rate: 0.37 },
+      ],
+    };
+
+    /**
+     * Reduce gross income by deductions to get taxable income.
+     * STUB: extend with credits, AGI adjustments, etc.
+     */
+    function calculateTaxableIncome(grossIncome, deductions) {
+      return Math.max(0, grossIncome - deductions);
+    }
+
+    /**
+     * Progressive bracket tax calculation.
+     * Returns the total tax owed for a given taxable income + status.
+     */
+    function calculateTax(taxableIncome, status) {
+      const brackets = BRACKETS[status] || BRACKETS.single;
+      let tax = 0;
+      let lowerBound = 0;
+      for (const { upTo, rate } of brackets) {
+        if (taxableIncome <= lowerBound) break;
+        const taxableInBracket = Math.min(taxableIncome, upTo) - lowerBound;
+        tax += taxableInBracket * rate;
+        lowerBound = upTo;
+      }
+      return tax;
+    }
+
+    /** Effective tax rate as a fraction of gross income. */
+    function effectiveRate(tax, grossIncome) {
+      if (grossIncome <= 0) return 0;
+      return tax / grossIncome;
+    }
+
+    const fmtCurrency = (n) =>
+      n.toLocaleString("en-US", { style: "currency", currency: "USD" });
+    const fmtPercent = (n) =>
+      (n * 100).toFixed(1) + "%";
+
+    // ---------------------------------------------------------------
+    // UI wiring
+    // ---------------------------------------------------------------
+    document.getElementById("calcBtn").addEventListener("click", () => {
+      const gross = parseFloat(document.getElementById("income").value) || 0;
+      const deductions = parseFloat(document.getElementById("deductions").value) || 0;
+      const status = document.getElementById("status").value;
+
+      const taxable = calculateTaxableIncome(gross, deductions);
+      const tax = calculateTax(taxable, status);
+      const rate = effectiveRate(tax, gross);
+
+      document.getElementById("r-gross").textContent = fmtCurrency(gross);
+      document.getElementById("r-taxable").textContent = fmtCurrency(taxable);
+      document.getElementById("r-rate").textContent = fmtPercent(rate);
+      document.getElementById("r-tax").textContent = fmtCurrency(tax);
+
+      document.getElementById("results").classList.add("show");
+    });
+  </script>
+</body>
+</html>
