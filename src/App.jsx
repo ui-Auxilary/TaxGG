@@ -1,10 +1,5 @@
 import { useMemo, useState } from "react";
-import {
-  calculateBreakdown,
-  DEFAULT_SUPER_RATE,
-  fmtCurrency,
-  fmtPercent,
-} from "./taxCalc.js";
+import { calculateBreakdown, DEFAULT_SUPER_RATE, fmtCurrency, fmtPercent } from "./taxCalc.js";
 
 const num = (v) => parseFloat(v) || 0;
 
@@ -37,50 +32,12 @@ export default function App() {
           <p className="subtitle">Australian take-home pay estimate · 2025-26</p>
         </header>
 
-        <div className="field">
-          <label htmlFor="salary">Base Annual Salary</label>
-          <input
-            id="salary"
-            type="number"
-            min="0"
-            step="1000"
-            placeholder="0"
-            value={salary}
-            onChange={(e) => setSalary(e.target.value)}
-          />
-        </div>
-
-        <div className="field">
-          <label htmlFor="bonus">Annual Bonus</label>
-          <input
-            id="bonus"
-            type="number"
-            min="0"
-            step="500"
-            placeholder="0"
-            value={bonus}
-            onChange={(e) => setBonus(e.target.value)}
-          />
-        </div>
-
-        <div className="field">
-          <label htmlFor="superRate">Superannuation Rate (%)</label>
-          <input
-            id="superRate"
-            type="number"
-            min="0"
-            step="0.5"
-            value={superRate}
-            onChange={(e) => setSuperRate(e.target.value)}
-          />
-        </div>
+        <NumberField id="salary" label="Base Annual Salary" step="1000" value={salary} onChange={setSalary} />
+        <NumberField id="bonus" label="Annual Bonus" step="500" value={bonus} onChange={setBonus} />
+        <NumberField id="superRate" label="Superannuation Rate (%)" step="0.5" value={superRate} onChange={setSuperRate} />
 
         <label className="checkbox">
-          <input
-            type="checkbox"
-            checked={hasStudentLoan}
-            onChange={(e) => setHasStudentLoan(e.target.checked)}
-          />
+          <input type="checkbox" checked={hasStudentLoan} onChange={(e) => setHasStudentLoan(e.target.checked)} />
           I have a HELP / HECS student loan
         </label>
 
@@ -90,33 +47,31 @@ export default function App() {
             <Row label="Income Tax (PAYG)" value={`− ${fmtCurrency(result.incomeTax)}`} />
             <Row label="Medicare Levy" value={`− ${fmtCurrency(result.medicareLevy)}`} />
             {hasStudentLoan && (
-              <Row
-                label="HELP / HECS Repayment"
-                value={`− ${fmtCurrency(result.helpRepayment)}`}
-              />
+              <Row label="HELP / HECS Repayment" value={`− ${fmtCurrency(result.helpRepayment)}`} />
             )}
             <Row label="Effective Tax Rate" value={fmtPercent(result.effectiveRate)} muted />
             <Row label="Net (Take-Home)" value={fmtCurrency(result.netIncome)} total />
-            <Row
-              label="Super (paid on top)"
-              value={`+ ${fmtCurrency(result.superContribution)}`}
-              accent
-            />
+            <Row label="Super (paid on top)" value={`+ ${fmtCurrency(result.superContribution)}`} accent />
           </div>
         )}
 
-        <p className="disclaimer">
-          Estimates only — simplified resident rates, not financial advice.
-        </p>
+        <p className="disclaimer">Estimates only — simplified resident rates, not financial advice.</p>
       </div>
     </div>
   );
 }
 
+function NumberField({ id, label, step, value, onChange }) {
+  return (
+    <div className="field">
+      <label htmlFor={id}>{label}</label>
+      <input id={id} type="number" min="0" step={step} placeholder="0" value={value} onChange={(e) => onChange(e.target.value)} />
+    </div>
+  );
+}
+
 function Row({ label, value, total, accent, muted }) {
-  const cls = ["row", total && "total", accent && "accent-row", muted && "muted-row"]
-    .filter(Boolean)
-    .join(" ");
+  const cls = ["row", total && "total", accent && "accent-row", muted && "muted-row"].filter(Boolean).join(" ");
   return (
     <div className={cls}>
       <span className="lbl">{label}</span>
